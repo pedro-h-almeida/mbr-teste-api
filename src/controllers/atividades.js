@@ -22,7 +22,8 @@ router.get('/:livro/:serie', async (req, res) => {
       ativ.id as 'idAtividade',
       ativ.descricao as 'descAtividade',
       alte.id as 'idAlternativa',
-      alte.descricao as 'descAlternativa'
+      alte.descricao as 'descAlternativa',
+      (select idAlternativa from atividades_repostas ar where ar.idAtividade = ativ.id) as 'idAlternativaCorreta'
     from
       atividades ativ
     inner join alternativas alte on
@@ -35,10 +36,11 @@ router.get('/:livro/:serie', async (req, res) => {
     poolConnection.query(getAtividadeLivroSerieSqlFormat, (err, results) => {
       const formatedData = [];
       const atividadeMap = new Map();
+      const respostasCorretas = [];
 
       for (const element of results) {
         const {
-          idAtividade, descAtividade, idAlternativa, descAlternativa,
+          idAtividade, descAtividade, idAlternativa, descAlternativa, idAlternativaCorreta,
         } = element;
 
         if (atividadeMap.has(idAtividade)) {
@@ -47,6 +49,12 @@ router.get('/:livro/:serie', async (req, res) => {
             descAlternativa,
           });
         } else {
+          respostasCorretas.push(
+            {
+              idAtividade,
+              idAlternativa: idAlternativaCorreta,
+            },
+          );
           atividadeMap.set(idAtividade, {
             idAtividade,
             descAtividade,
@@ -62,7 +70,9 @@ router.get('/:livro/:serie', async (req, res) => {
 
       formatedData.push(...atividadeMap.values());
 
-      res.status(200).send({ status: 'ok', message: 'Sucesso GET Atividades', data: formatedData });
+      res.status(200).send({
+        status: 'ok', message: 'Sucesso GET Atividades', data: formatedData, respostasCorretas,
+      });
     });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error.message });
@@ -402,27 +412,6 @@ router.put('/', (req, res) => {
         }));
       });
     });
-
-    // -------------------------------------
-    // Montagem dos dados para atualizar a tabela
-
-    // Tabela Atividade
-    // if (shoudUpdateAtividade) {
-    //   if (descAtividade) {
-    //     updateAtividadeData = { ...updateAtividadeData, descricao: descAtividade };
-    //   }
-    //   if (idLivro) {
-    //     updateAtividadeData = { ...updateAtividadeData, idLivro };
-    //   }
-    //   if (idSerie) {
-    //     updateAtividadeData = { ...updateAtividadeData, idSerie };
-    //   }
-    // }
-
-    // -------------------------------------
-    // -------------------------------------
-
-    // res.status(200).send({ status: 'ok', message: 'Sucesso PUT' });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error.message });
   }
