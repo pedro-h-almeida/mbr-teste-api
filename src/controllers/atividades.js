@@ -62,16 +62,85 @@ router.get('/:livro/:serie', async (req, res) => {
 
       formatedData.push(...atividadeMap.values());
 
-      res.status(200).send({ status: 'ok', message: 'Sucesso GET', data: formatedData });
+      res.status(200).send({ status: 'ok', message: 'Sucesso GET Atividades', data: formatedData });
     });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error });
   }
 });
 
-router.get('/:index', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    res.status(200).send({ status: 'ok', message: 'Sucesso GET' });
+    const {
+      id,
+    } = req.params;
+
+    const atividadeSql = `
+      select
+        ativ.id as 'idAtividade',
+        ativ.descricao as 'descAtividade',
+        ativ.idLivro as 'idLivro',
+        (select lev.descricao from livros lev where lev.id = ativ.idLivro) as 'descLivro',
+        ativ.idSerie  as 'idSerie',
+        (select ser.descricao from series ser where ser.id = ativ.idSerie) as 'descSerie',
+        (select idAlternativa from atividades_repostas ar where ar.idAtividade = ativ.id) as 'idAlternativaCorreta',
+        alte.id as 'idAlternativa',
+        alte.descricao as 'descAlternativa'
+      from
+        atividades ativ
+      inner join alternativas alte on
+        ativ.id = alte.idAtividade
+      where
+        ativ.id = ?;
+    `;
+    const insertAtividade = [id];
+    const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
+
+    poolConnection.query(atividadeSqlFormat, (err, results) => {
+      const formatedData = [];
+      const atividadeMap = new Map();
+
+      for (const element of results) {
+        const {
+          idAtividade,
+          descAtividade,
+          idLivro,
+          descLivro,
+          idSerie,
+          descSerie,
+          idAlternativaCorreta,
+          idAlternativa,
+          descAlternativa,
+        } = element;
+
+        if (atividadeMap.has(idAtividade)) {
+          atividadeMap.get(idAtividade).alternativas.push({
+            idAlternativa,
+            descAlternativa,
+          });
+        } else {
+          atividadeMap.set(idAtividade, {
+            idAtividade,
+            descAtividade,
+            idLivro,
+            descLivro,
+            idSerie,
+            descSerie,
+            idAlternativaCorreta,
+            alternativas: [
+              {
+                idAlternativa,
+                descAlternativa,
+              },
+            ],
+          });
+        }
+      }
+
+      formatedData.push(...atividadeMap.values());
+
+      res.status(200).send({ status: 'ok', message: 'Sucesso GET Atividade By ID', data: formatedData });
+    });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error });
   }
