@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable consistent-return */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable quotes */
@@ -53,10 +54,11 @@ router.post('/', async (req, res) => {
       conn.beginTransaction();
 
       // SQL 1 - Atividade
-      await conn.promise().execute(atividadeSqlFormat, (error, results) => {
-        if (error) throw error;
-        atividadeResultId = results.insertId;
-        console.log(results.insertId);
+      conn.promise().execute(atividadeSqlFormat).then((results) => {
+        atividadeResultId = results[0].insertId;
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       const insertAlternativaA = ['descricao', 'idAtividade', 'status', alternativaA, atividadeResultId, 0];
@@ -70,39 +72,43 @@ router.post('/', async (req, res) => {
       const alternativaDSqlFormat = mysql.format(alternativasSql, insertAlternativaD);
 
       // SQL 2 - Alternativa A
-      await conn.promise().execute(alternativaASqlFormat, (error, results) => {
-        if (error) throw error;
+      conn.promise().execute(alternativaASqlFormat).then((results) => {
         if (alternativaCorreta === 0) {
-          alternativaCorretaResultId = results.insertId;
+          alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results.insertId);
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       // SQL 3 - Alternativa B
-      await conn.promise().execute(alternativaBSqlFormat, (error, results) => {
-        if (error) throw error;
+      conn.promise().execute(alternativaBSqlFormat).then((results) => {
         if (alternativaCorreta === 1) {
-          alternativaCorretaResultId = results.insertId;
+          alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results.insertId);
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       // SQL 4 - Alternativa C
-      await conn.promise().execute(alternativaCSqlFormat, (error, results) => {
-        if (error) throw error;
+      conn.promise().execute(alternativaCSqlFormat).then((results) => {
         if (alternativaCorreta === 2) {
-          alternativaCorretaResultId = results.insertId;
+          alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results.insertId);
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       // SQL 5 - Alternativa D
-      await conn.promise().execute(alternativaDSqlFormat, (error, results) => {
-        if (error) throw error;
+      conn.promise().execute(alternativaDSqlFormat).then((results) => {
         if (alternativaCorreta === 3) {
-          alternativaCorretaResultId = results.insertId;
+          alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results.insertId);
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       const insertAtividadeResposta = ['idAtividade', 'idAlternativa', atividadeResultId, alternativaCorretaResultId];
@@ -110,9 +116,10 @@ router.post('/', async (req, res) => {
       const atividadeRespostaSqlFormat = mysql.format(atividadeRespostaSql, insertAtividadeResposta);
 
       // SQL 6 - Atividade Resposta
-      await conn.promise().execute(atividadeRespostaSqlFormat, (error, results) => {
-        if (error) throw error;
-        console.log(results.insertId);
+      conn.promise().execute(atividadeRespostaSqlFormat).then((results) => {
+        console.log(results[0].insertId);
+      }).catch((error) => {
+        throw error;
       });
 
       // Commit and release
