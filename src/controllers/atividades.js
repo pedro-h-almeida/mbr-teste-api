@@ -54,9 +54,9 @@ router.post('/', async (req, res) => {
       conn.beginTransaction();
 
       // SQL 1 - Atividade
-      conn.promise().execute(atividadeSqlFormat).then((results) => {
-        atividadeResultId = results[0].insertId;
-        console.log('Atividade ID: ', results[0].insertId);
+      conn.promise().execute(atividadeSqlFormat).then((atividadeResult) => {
+        atividadeResultId = atividadeResult[0].insertId;
+        console.log('Atividade ID: ', atividadeResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -72,41 +72,41 @@ router.post('/', async (req, res) => {
       const alternativaDSqlFormat = mysql.format(alternativasSql, insertAlternativaD);
 
       // SQL 2 - Alternativa A
-      conn.promise().execute(alternativaASqlFormat).then((results) => {
+      conn.promise().execute(alternativaASqlFormat).then((alternativaAResult) => {
         if (alternativaCorreta === 0) {
-          alternativaCorretaResultId = results[0].insertId;
+          alternativaCorretaResultId = alternativaAResult[0].insertId;
         }
-        console.log('Alternativa A ID: ', results[0].insertId);
+        console.log('Alternativa A ID: ', alternativaAResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
 
       // SQL 3 - Alternativa B
-      conn.promise().execute(alternativaBSqlFormat).then((results) => {
+      conn.promise().execute(alternativaBSqlFormat).then((alternativaBResult) => {
         if (alternativaCorreta === 1) {
-          alternativaCorretaResultId = results[0].insertId;
+          alternativaCorretaResultId = alternativaBResult[0].insertId;
         }
-        console.log('Alternativa B ID: ', results[0].insertId);
+        console.log('Alternativa B ID: ', alternativaBResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
 
       // SQL 4 - Alternativa C
-      conn.promise().execute(alternativaCSqlFormat).then((results) => {
+      conn.promise().execute(alternativaCSqlFormat).then((alternativaCResult) => {
         if (alternativaCorreta === 2) {
-          alternativaCorretaResultId = results[0].insertId;
+          alternativaCorretaResultId = alternativaCResult[0].insertId;
         }
-        console.log('Alternativa C ID: ', results[0].insertId);
+        console.log('Alternativa C ID: ', alternativaCResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
 
       // SQL 5 - Alternativa D
-      conn.promise().execute(alternativaDSqlFormat).then((results) => {
+      conn.promise().execute(alternativaDSqlFormat).then((alternativaDResult) => {
         if (alternativaCorreta === 3) {
-          alternativaCorretaResultId = results[0].insertId;
+          alternativaCorretaResultId = alternativaDResult[0].insertId;
         }
-        console.log('Alternativa D ID: ', results[0].insertId);
+        console.log('Alternativa D ID: ', alternativaDResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -115,8 +115,8 @@ router.post('/', async (req, res) => {
       const atividadeRespostaSqlFormat = mysql.format(atividadeRespostaSql, insertAtividadeResposta);
 
       // SQL 6 - Atividade Resposta
-      conn.promise().execute(atividadeRespostaSqlFormat).then((results) => {
-        console.log('Atividade Resposta ID: ', results[0].insertId);
+      conn.promise().execute(atividadeRespostaSqlFormat).then((atividadeRespostaResult) => {
+        console.log('Atividade Resposta ID: ', atividadeRespostaResult[0].insertId);
       }).catch((error) => {
         throw error;
       });
