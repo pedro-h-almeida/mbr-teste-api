@@ -1,0 +1,31 @@
+{
+  "name": "teste-mbr-back_end",
+  "version": "1.0.0",
+  "description": "Back-end Teste MBR",
+  "main": "index.js",
+  "author": "Pedro Henrique de Almeida <pedro.henrique.almeida.dev@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "run": "yarn run dev",
+    "dev": "nodemon ./src --exec \"npm run lint && node\"",
+    "lint": "eslint src -c .eslintrc",
+    "prod": "node src/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv-safe": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.6.3",
+    "nodemon": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.53.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.17.2"
+  }
+}
