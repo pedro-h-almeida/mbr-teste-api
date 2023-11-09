@@ -17,7 +17,7 @@ router.get('/:livro/:serie', async (req, res) => {
       serie,
     } = req.params;
 
-    const atividadeSql = `
+    const getAtividadeLivroSerieSql = `
     select
       ativ.id as 'idAtividade',
       ativ.descricao as 'descAtividade',
@@ -29,10 +29,10 @@ router.get('/:livro/:serie', async (req, res) => {
       ativ.id = alte.idAtividade
     where ativ.idLivro = ? and ativ.idSerie = ?;
     `;
-    const insertAtividade = [livro, serie];
-    const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
+    const sqlValues = [livro, serie];
+    const getAtividadeLivroSerieSqlFormat = mysql.format(getAtividadeLivroSerieSql, sqlValues);
 
-    poolConnection.query(atividadeSqlFormat, (err, results) => {
+    poolConnection.query(getAtividadeLivroSerieSqlFormat, (err, results) => {
       const formatedData = [];
       const atividadeMap = new Map();
 
@@ -75,7 +75,7 @@ router.get('/:id', async (req, res) => {
       id,
     } = req.params;
 
-    const atividadeSql = `
+    const getAtividadeIdSql = `
       select
         ativ.id as 'idAtividade',
         ativ.descricao as 'descAtividade',
@@ -93,10 +93,10 @@ router.get('/:id', async (req, res) => {
       where
         ativ.id = ?;
     `;
-    const insertAtividade = [id];
-    const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
+    const sqlValues = [id];
+    const getAtividadeIdSqlFormat = mysql.format(getAtividadeIdSql, sqlValues);
 
-    poolConnection.query(atividadeSqlFormat, (err, results) => {
+    poolConnection.query(getAtividadeIdSqlFormat, (err, results) => {
       const formatedData = [];
       const atividadeMap = new Map();
 
@@ -286,11 +286,19 @@ router.put('/:index', (req, res) => {
   }
 });
 
-router.delete('/:index', (req, res) => {
+router.delete('/:idAtividadeDelete', (req, res) => {
   try {
-    console.log('PARAMS: ', req.params);
-    console.log('BODY: ', req.body);
-    res.status(200).send({ status: 'ok', message: 'Sucesso DELETE' });
+    const {
+      idAtividadeDelete,
+    } = req.params;
+
+    const deleteAtividadeSql = 'DELETE FROM atividades WHERE id = ?;';
+    const sqlValues = [idAtividadeDelete];
+    const deleteAtividadeSqlFormat = mysql.format(deleteAtividadeSql, sqlValues);
+
+    poolConnection.query(deleteAtividadeSqlFormat, (err, results) => {
+      res.status(200).send({ status: 'ok', message: 'Sucesso DELETE', idAtividadeDeletada: idAtividadeDelete });
+    });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error });
   }
