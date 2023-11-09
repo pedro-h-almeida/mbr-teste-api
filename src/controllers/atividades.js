@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
       // SQL 1 - Atividade
       conn.promise().execute(atividadeSqlFormat).then((results) => {
         atividadeResultId = results[0].insertId;
-        console.log(results[0].insertId);
+        console.log('Atividade ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -76,7 +76,7 @@ router.post('/', async (req, res) => {
         if (alternativaCorreta === 0) {
           alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results[0].insertId);
+        console.log('Alternativa A ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -86,7 +86,7 @@ router.post('/', async (req, res) => {
         if (alternativaCorreta === 1) {
           alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results[0].insertId);
+        console.log('Alternativa B ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -96,7 +96,7 @@ router.post('/', async (req, res) => {
         if (alternativaCorreta === 2) {
           alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results[0].insertId);
+        console.log('Alternativa C ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
@@ -106,18 +106,17 @@ router.post('/', async (req, res) => {
         if (alternativaCorreta === 3) {
           alternativaCorretaResultId = results[0].insertId;
         }
-        console.log(results[0].insertId);
+        console.log('Alternativa D ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
 
       const insertAtividadeResposta = ['idAtividade', 'idAlternativa', atividadeResultId, alternativaCorretaResultId];
-
       const atividadeRespostaSqlFormat = mysql.format(atividadeRespostaSql, insertAtividadeResposta);
 
       // SQL 6 - Atividade Resposta
       conn.promise().execute(atividadeRespostaSqlFormat).then((results) => {
-        console.log(results[0].insertId);
+        console.log('Atividade Resposta ID: ', results[0].insertId);
       }).catch((error) => {
         throw error;
       });
