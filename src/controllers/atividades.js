@@ -23,12 +23,26 @@ router.get('/:livro/:serie', async (req, res) => {
       ativ.descricao as 'descAtividade',
       alte.id as 'idAlternativa',
       alte.descricao as 'descAlternativa',
-      (select idAlternativa from atividades_repostas ar where ar.idAtividade = ativ.id) as 'idAlternativaCorreta'
+      (
+      select
+        idAlternativa
+      from
+        atividades_repostas ar
+      where
+        ar.idAtividade = ativ.id) as 'idAlternativaCorreta'
     from
-      atividades ativ
+      (
+      select
+        *
+      from
+        atividades a
+      limit 5 ) ativ
     inner join alternativas alte on
       ativ.id = alte.idAtividade
-    where ativ.idLivro = ? and ativ.idSerie = ?;
+    where
+      ativ.idLivro = ?
+      and ativ.idSerie = ?
+        ;
     `;
     const sqlValues = [livro, serie];
     const getAtividadeLivroSerieSqlFormat = mysql.format(getAtividadeLivroSerieSql, sqlValues);
