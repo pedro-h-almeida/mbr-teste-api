@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable consistent-return */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable quotes */
@@ -70,28 +69,28 @@ router.post('/', async (req, res) => {
 
         // SQL 2 - Alternativa A
         conn.promise().execute(alternativaASqlFormat).then((alternativaAResult) => {
-          if (alternativaCorreta === 0) {
+          if (alternativaCorreta === 1) {
             alternativaCorretaResultId = alternativaAResult[0].insertId;
           }
           console.log('Alternativa A ID: ', alternativaAResult[0].insertId);
 
           // SQL 3 - Alternativa B
           conn.promise().execute(alternativaBSqlFormat).then((alternativaBResult) => {
-            if (alternativaCorreta === 1) {
+            if (alternativaCorreta === 2) {
               alternativaCorretaResultId = alternativaBResult[0].insertId;
             }
             console.log('Alternativa B ID: ', alternativaBResult[0].insertId);
 
             // SQL 4 - Alternativa C
             conn.promise().execute(alternativaCSqlFormat).then((alternativaCResult) => {
-              if (alternativaCorreta === 2) {
+              if (alternativaCorreta === 3) {
                 alternativaCorretaResultId = alternativaCResult[0].insertId;
               }
               console.log('Alternativa C ID: ', alternativaCResult[0].insertId);
 
               // SQL 5 - Alternativa D
               conn.promise().execute(alternativaDSqlFormat).then((alternativaDResult) => {
-                if (alternativaCorreta === 3) {
+                if (alternativaCorreta === 4) {
                   alternativaCorretaResultId = alternativaDResult[0].insertId;
                 }
                 console.log('Alternativa D ID: ', alternativaDResult[0].insertId);
@@ -106,6 +105,7 @@ router.post('/', async (req, res) => {
                   // Commit and release
                   conn.commit();
                   poolConnection.releaseConnection(conn);
+                  res.status(200).send({ status: 'ok', message: 'Sucesso PUT' });
                 }).catch((error) => {
                   throw error;
                 });
