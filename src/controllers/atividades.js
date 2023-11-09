@@ -10,9 +10,60 @@ const poolConnection = require('../connection');
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/:livro/:serie', async (req, res) => {
   try {
-    res.status(200).send({ status: 'ok', message: 'Sucesso GET' });
+    const {
+      livro,
+      serie,
+    } = req.params;
+
+    const atividadeSql = `
+    select
+      ativ.id as 'idAtividade',
+      ativ.descricao as 'descAtividade',
+      alte.id as 'idAlternativa',
+      alte.descricao as 'descAlternativa'
+    from
+      atividades ativ
+    inner join alternativas alte on
+      ativ.id = alte.idAtividade
+    where ativ.idLivro = ? and ativ.idSerie = ?;
+    `;
+    const insertAtividade = [livro, serie];
+    const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
+
+    poolConnection.query(atividadeSqlFormat, (err, results) => {
+      const formatedData = [];
+      const atividadeMap = new Map();
+
+      for (const element of results) {
+        const {
+          idAtividade, descAtividade, idAlternativa, descAlternativa,
+        } = element;
+
+        if (atividadeMap.has(idAtividade)) {
+          atividadeMap.get(idAtividade).alternativas.push({
+            idAlternativa,
+            descAlternativa,
+          });
+        } else {
+          atividadeMap.set(idAtividade, {
+            idAtividade,
+            descAtividade,
+            alternativas: [
+              {
+                idAlternativa,
+                descAlternativa,
+              },
+            ],
+          });
+        }
+      }
+
+      formatedData.push(...atividadeMap.values());
+
+      res.status(200).send({ status: 'ok', message: 'Sucesso GET', data: formatedData });
+    });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error });
   }
