@@ -179,7 +179,7 @@ router.post('/', async (req, res, next) => {
       }
     }
 
-    if (alternativasCount > Number(process.env.ATIVIDADES_MAX_ALTERNATIVAS)) {
+    if (alternativasCount > 4) {
       throw new Error("Numero Máximo de Alternativas alcançado!");
     }
 
