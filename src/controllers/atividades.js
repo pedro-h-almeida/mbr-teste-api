@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-throw-literal */
 /* eslint-disable consistent-return */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable quotes */
@@ -24,109 +26,133 @@ router.get('/:index', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const {
       descAtividade,
       idLivro,
       idSerie,
-      alternativaA,
-      alternativaB,
-      alternativaC,
-      alternativaD,
-      alternativaCorreta,
+      alternativas,
     } = req.body;
+
+    // -----------------------------------------------------
+    // -----------------------------------------------------
+    // Checando se o array alternativas respeita as regras de tamanho
+
+    let alternativasCount = 0;
+    let alternativasCorretasCount = 0;
+
+    for (const element of alternativas) {
+      alternativasCount += 1;
+      if (element.isCorreta) {
+        alternativasCorretasCount += 1;
+      }
+    }
+
+    if (alternativasCount > Number(process.env.ATIVIDADES_MAX_ALTERNATIVAS)) {
+      throw new Error("Numero Máximo de Alternativas alcançado!");
+    }
+
+    if (alternativasCorretasCount === 0) {
+      throw new Error("Atividade deve possuir ao menos 1 alternativa marcada como resposta");
+    }
+
+    if (alternativasCorretasCount > 1) {
+      throw new Error("Atividade só pode ter 1 alternativa marcada como correta!");
+    }
+
+    // -----------------------------------------------------
+    // -----------------------------------------------------
+    // -----------------------------------------------------
+
+    const alternativasProcedure = [];
+
     const atividadeSql = 'INSERT INTO atividades (??, ??, ??, ??) VALUES(?, ?, ?, ?);';
-    const insertAtividade = ['descricao', 'idLivro', 'idSerie', 'status', descAtividade, idLivro, idSerie, 0];
-    const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
-    let atividadeResultId;
-    let alternativaCorretaResultId;
-
     const alternativasSql = 'INSERT INTO alternativas (??, ??, ??) VALUES(?, ?, ?);';
-
     const atividadeRespostaSql = 'INSERT INTO atividades_repostas (??, ??) VALUES(?, ?);';
 
-    poolConnection.getConnection(async (err, conn) => {
-      if (err) throw err;
+    let alternativaCorretaResultId;
 
-      // Start transaction
-      conn.beginTransaction();
+    // Pegando uma connection da pool para utilizar na transaction
+    poolConnection.getConnection((getConnectionErr, connection) => {
+      if (getConnectionErr) throw getConnectionErr; // not connected!
 
-      // SQL 1 - Atividade
-      conn.promise().execute(atividadeSqlFormat).then((atividadeResult) => {
-        atividadeResultId = atividadeResult[0].insertId;
-        console.log('Atividade ID: ', atividadeResult[0].insertId);
+      // Iniciando a transaction
+      connection.beginTransaction((beginTransactionErr) => {
+        if (beginTransactionErr) { throw beginTransactionErr; } // transacion error
 
-        const insertAlternativaA = ['descricao', 'idAtividade', 'status', alternativaA, atividadeResultId, 0];
-        const insertAlternativaB = ['descricao', 'idAtividade', 'status', alternativaB, atividadeResultId, 0];
-        const insertAlternativaC = ['descricao', 'idAtividade', 'status', alternativaC, atividadeResultId, 0];
-        const insertAlternativaD = ['descricao', 'idAtividade', 'status', alternativaD, atividadeResultId, 0];
+        const insertAtividade = ['descricao', 'idLivro', 'idSerie', 'status', descAtividade, idLivro, idSerie, 0];
+        const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
 
-        const alternativaASqlFormat = mysql.format(alternativasSql, insertAlternativaA);
-        const alternativaBSqlFormat = mysql.format(alternativasSql, insertAlternativaB);
-        const alternativaCSqlFormat = mysql.format(alternativasSql, insertAlternativaC);
-        const alternativaDSqlFormat = mysql.format(alternativasSql, insertAlternativaD);
-
-        // SQL 2 - Alternativa A
-        conn.promise().execute(alternativaASqlFormat).then((alternativaAResult) => {
-          if (alternativaCorreta === 1) {
-            alternativaCorretaResultId = alternativaAResult[0].insertId;
-          }
-          console.log('Alternativa A ID: ', alternativaAResult[0].insertId);
-
-          // SQL 3 - Alternativa B
-          conn.promise().execute(alternativaBSqlFormat).then((alternativaBResult) => {
-            if (alternativaCorreta === 2) {
-              alternativaCorretaResultId = alternativaBResult[0].insertId;
-            }
-            console.log('Alternativa B ID: ', alternativaBResult[0].insertId);
-
-            // SQL 4 - Alternativa C
-            conn.promise().execute(alternativaCSqlFormat).then((alternativaCResult) => {
-              if (alternativaCorreta === 3) {
-                alternativaCorretaResultId = alternativaCResult[0].insertId;
-              }
-              console.log('Alternativa C ID: ', alternativaCResult[0].insertId);
-
-              // SQL 5 - Alternativa D
-              conn.promise().execute(alternativaDSqlFormat).then((alternativaDResult) => {
-                if (alternativaCorreta === 4) {
-                  alternativaCorretaResultId = alternativaDResult[0].insertId;
-                }
-                console.log('Alternativa D ID: ', alternativaDResult[0].insertId);
-
-                const insertAtividadeResposta = ['idAtividade', 'idAlternativa', atividadeResultId, alternativaCorretaResultId];
-                const atividadeRespostaSqlFormat = mysql.format(atividadeRespostaSql, insertAtividadeResposta);
-
-                // SQL 6 - Atividade Resposta
-                conn.promise().execute(atividadeRespostaSqlFormat).then((atividadeRespostaResult) => {
-                  console.log('Atividade Resposta ID: ', atividadeRespostaResult[0].insertId);
-
-                  // Commit and release
-                  conn.commit();
-                  poolConnection.releaseConnection(conn);
-                  res.status(200).send({ status: 'ok', message: 'Sucesso PUT' });
-                }).catch((error) => {
-                  throw error;
-                });
-              }).catch((error) => {
-                throw error;
-              });
-            }).catch((error) => {
-              throw error;
+        // Query que executa a inclusão da atividade no banco
+        connection.query(atividadeSqlFormat, (errorAtividade, atividadeResult) => {
+          if (errorAtividade) {
+            return connection.rollback(() => {
+              connection.release();
+              throw errorAtividade;
             });
-          }).catch((error) => {
-            throw error;
+          }
+          console.log('Atividade ID: ', atividadeResult.insertId);
+
+          // Criador das querys que adicionam as atividades no banco
+          const alternativaProcedure = (data) => new Promise((resolve, reject) => {
+            const insertAlternativa = ['descricao', 'idAtividade', 'status', data.descAlternativa, atividadeResult.insertId, 0];
+            const alternativaSqlFormat = mysql.format(alternativasSql, insertAlternativa);
+            connection.query(alternativaSqlFormat, (errorAlternativa, alternativaResult) => {
+              if (errorAlternativa) {
+                return connection.rollback(() => {
+                  connection.release();
+                  reject(errorAlternativa);
+                });
+              }
+              if (data.isCorreta) {
+                alternativaCorretaResultId = alternativaResult.insertId;
+              }
+              console.log('Alternativa ID: ', alternativaResult.insertId);
+              resolve(alternativaResult);
+            });
           });
-        }).catch((error) => {
-          throw error;
+
+          for (const element of alternativas) {
+            alternativasProcedure.push(alternativaProcedure(element));
+          }
+
+          Promise.all(alternativasProcedure).then(() => {
+            const insertAtividadeResposta = ['idAtividade', 'idAlternativa', atividadeResult.insertId, alternativaCorretaResultId];
+            const atividadeRespostaSqlFormat = mysql.format(atividadeRespostaSql, insertAtividadeResposta);
+
+            // Query que da tabela atividades_repostas
+            connection.query(atividadeRespostaSqlFormat, (errorAtividadeResposta, atividadeRespostaResult) => {
+              if (errorAtividadeResposta) {
+                return connection.rollback(() => {
+                  connection.release();
+                  throw errorAtividadeResposta;
+                });
+              }
+
+              console.log('Atividade Resposta ID: ', atividadeRespostaResult.insertId);
+
+              // Commit da transaction se as querys passarem
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    throw err;
+                  });
+                }
+                connection.release();
+                res.status(200).send({ status: 'ok', message: 'Sucesso, atividade cadastrada com sucesso', idAtividade: atividadeResult.insertId });
+              });
+            });
+          }).catch((erroPromiseAll) => connection.rollback(() => {
+            connection.release();
+            throw erroPromiseAll;
+          }));
         });
-      }).catch((error) => {
-        throw error;
       });
     });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error });
+    res.status(500).send({ status: 'error', message: error.message });
   }
 });
 

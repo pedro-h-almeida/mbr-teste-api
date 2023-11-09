@@ -3,8 +3,6 @@ const mysql = require('mysql2');
 require('dotenv-safe').config({
   example: `${__dirname}/./../.env.example`,
 });
-
-console.log(process.env.DB_HOST);
 // Create the connection pool. The pool-specific settings are the defaults
 const poolConnection = mysql.createPool({
   host: process.env.DB_HOST,
