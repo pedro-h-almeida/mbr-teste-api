@@ -65,7 +65,7 @@ router.get('/:livro/:serie', async (req, res) => {
       res.status(200).send({ status: 'ok', message: 'Sucesso GET Atividades', data: formatedData });
     });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error });
+    res.status(500).send({ status: 'error', message: error.message });
   }
 });
 
@@ -142,7 +142,7 @@ router.get('/:id', async (req, res) => {
       res.status(200).send({ status: 'ok', message: 'Sucesso GET Atividade By ID', data: formatedData });
     });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error });
+    res.status(500).send({ status: 'error', message: error.message });
   }
 });
 
@@ -276,13 +276,155 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.put('/:index', (req, res) => {
+router.put('/', (req, res) => {
   try {
-    console.log('PARAMS: ', req.params);
-    console.log('BODY: ', req.body);
-    res.status(200).send({ status: 'ok', message: 'Sucesso PUT' });
+    const {
+      idAtividade,
+      descAtividade,
+      idLivro,
+      idSerie,
+      alternativas,
+    } = req.body;
+
+    const updateAtividadeSql = 'UPDATE atividades SET ?  WHERE id = ?';
+    const updateAlternativasSql = 'UPDATE alternativas SET ?  WHERE id = ?';
+    const updateAtividadeRespostaSql = 'UPDATE atividades_repostas SET ? WHERE idAtividade = ?';
+
+    let shoudUpdateAtividade = false;
+    let shoudUpdateAlternativas = false;
+    let shoudUpdateAtividadeResposta = false;
+
+    let updateAtividadeData = {};
+    let updateAtividadeRespostaData = {};
+
+    // -------------------------------------
+    // Checando se os dados enviados são os esperados
+    if (typeof idAtividade !== 'number') {
+      throw new Error("É necessário enviar o idAtividade");
+    }
+
+    // -------------------------------------
+    // Checando quais tabelas devem ser atualizadas baseado nos dados do json enviado
+    if (descAtividade || idLivro || idSerie) {
+      shoudUpdateAtividade = true;
+    }
+
+    if (alternativas && alternativas.length > 0) {
+      shoudUpdateAlternativas = true;
+      if (alternativas.findIndex((element) => element.isCorreta) !== -1) {
+        shoudUpdateAtividadeResposta = true;
+      }
+    }
+
+    // -------------------------------------
+    // Se não houver dados o suficiente para atualizar as tabelas disparo um erro
+    if (!shoudUpdateAtividade && !shoudUpdateAlternativas && !shoudUpdateAtividadeResposta) {
+      throw new Error("Não a dados o suficiente para atualizar a atividade");
+    }
+
+    // -------------------------------------
+    // Pegando uma connection da pool para utilizar na transaction
+    poolConnection.getConnection((getConnectionErr, connection) => {
+      if (getConnectionErr) throw getConnectionErr; // not connected!
+
+      // -------------------------------------
+      // Iniciando a transaction
+      connection.beginTransaction((beginTransactionErr) => {
+        if (beginTransactionErr) { throw beginTransactionErr; } // transacion error
+
+        const queriesPromise = [];
+
+        // -------------------------------------
+        // Criador das querys que adicionam as atividades no banco
+        const queryPromise = (sqlQuery, data, id) => new Promise((resolve, reject) => {
+          connection.query(sqlQuery, [data, id], (errorQuery, queryResult) => {
+            if (errorQuery) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(errorQuery);
+              });
+            }
+            console.log('Query Promise Result Info: ', queryResult.info);
+            resolve(queryResult);
+          });
+        });
+
+        // -------------------------------------
+        // Montagem query Atividade
+        if (shoudUpdateAtividade) {
+          if (descAtividade) {
+            updateAtividadeData = { ...updateAtividadeData, descricao: descAtividade };
+          }
+          if (idLivro) {
+            updateAtividadeData = { ...updateAtividadeData, idLivro };
+          }
+          if (idSerie) {
+            updateAtividadeData = { ...updateAtividadeData, idSerie };
+          }
+          queriesPromise.push(queryPromise(updateAtividadeSql, updateAtividadeData, idAtividade));
+        }
+
+        // -------------------------------------
+        // Montagem query Alternativas
+        if (shoudUpdateAlternativas) {
+          for (const element of alternativas) {
+            if (typeof element.descAlternativa === 'string') {
+              queriesPromise.push(queryPromise(updateAlternativasSql, { descricao: element.descAlternativa }, element.idAlternativa));
+            }
+          }
+        }
+
+        // -------------------------------------
+        // Montagem query Resposta
+        if (shoudUpdateAtividadeResposta) {
+          const alternativaObj = alternativas.find((element) => element.isCorreta);
+          if (alternativaObj.idAlternativa) {
+            updateAtividadeRespostaData = { idAlternativa: alternativaObj.idAlternativa };
+            queriesPromise.push(queryPromise(updateAtividadeRespostaSql, updateAtividadeRespostaData, idAtividade));
+          }
+        }
+
+        Promise.all(queriesPromise).then(() => {
+          // Commit da transaction se as querys passarem
+          connection.commit((err) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                throw err;
+              });
+            }
+            connection.release();
+            res.status(200).send({ status: 'ok', message: 'Sucesso, atividade atualizada com sucesso' });
+          });
+        }).catch((erroPromiseAll) => connection.rollback(() => {
+          connection.release();
+          throw erroPromiseAll;
+        }));
+      });
+    });
+
+    // -------------------------------------
+    // Montagem dos dados para atualizar a tabela
+
+    // Tabela Atividade
+    // if (shoudUpdateAtividade) {
+    //   if (descAtividade) {
+    //     updateAtividadeData = { ...updateAtividadeData, descricao: descAtividade };
+    //   }
+    //   if (idLivro) {
+    //     updateAtividadeData = { ...updateAtividadeData, idLivro };
+    //   }
+    //   if (idSerie) {
+    //     updateAtividadeData = { ...updateAtividadeData, idSerie };
+    //   }
+    // }
+
+    // -------------------------------------
+    // -------------------------------------
+
+    // res.status(200).send({ status: 'ok', message: 'Sucesso PUT' });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error });
+    res.status(500).send({ status: 'error', message: error.message });
   }
 });
 
@@ -300,7 +442,7 @@ router.delete('/:idAtividadeDelete', (req, res) => {
       res.status(200).send({ status: 'ok', message: 'Sucesso DELETE', idAtividadeDeletada: idAtividadeDelete });
     });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error });
+    res.status(500).send({ status: 'error', message: error.message });
   }
 });
 
