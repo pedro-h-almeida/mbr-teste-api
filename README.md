@@ -6,6 +6,8 @@ Aplicação back-end referente ao desafio técnico full-stack proposto pela empr
 
 ## Preparo
 
+Versão do Node utilizada: v20.9.0
+
 Instale as dependências do projeto
 
 ```bash
