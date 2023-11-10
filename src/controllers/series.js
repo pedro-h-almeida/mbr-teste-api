@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     poolConnection.query(
-      'SELECT id AS "value", descricao AS "label" FROM series WHERE status = 0',
+      'SELECT id AS "value", descricao AS "label" FROM series',
       (err, results) => {
         res.status(200).send({ status: 'ok', message: 'Sucesso GET', results });
       },
