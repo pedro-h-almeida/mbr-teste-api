@@ -151,3 +151,7 @@ O campo 'img' da tabela `livros` foi criado apenas como uma forma de selecionar 
   '/icone-mundo.png'
 ```
 `icone-mundo.png` é a imagem padrão utilizada quando o campo se encontra vazio.
+
+## Extras
+
+Qualquer problema ao executar a api ou erro no código pode criar uma issue que eu responderei.
