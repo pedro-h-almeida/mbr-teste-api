@@ -130,7 +130,7 @@ Node, Express
 
 ## Banco de Dados
 
-![App Screenshot](https://i.imgur.com/cFStG09.png)
+![App Screenshot](https://i.imgur.com/JYpnZkj.png)
 
 Criei as tabelas `livros` e `series` para ter um controle melhor nas relações do banco.
 
@@ -139,5 +139,13 @@ Outras duas opções consideradas foram a inclusão de um campo na tabela `ativi
 
 A inclusão de um campo 'status' nas tabelas, a fim de desativar registros em vez de excluí-los, seria uma alternativa para manter o controle de integridade. Isso impediria, por exemplo, a exclusão de registros relacionados a respostas. No entanto, dado que o projeto não requer o armazenamento das respostas do usuário, optei por não criar esse campo.
 
-
 A tabela está configurada para realizar a exclusão em cascata das chaves estrangeiras.
+
+O campo 'img' da tabela `livros` foi criado apenas como uma forma de selecionar a imagem exibida nos botões de livros no front-end. Ele faz referência aos nomes das imagens armazenadas na pasta `public`, sendo elas:
+```bash
+  '/brasil.pgn'
+  '/espanha.png'
+  '/estados-unidos.png'
+  '/icone-mundo.png'
+```
+`icone-mundo.png` é a imagem padrão utilizada quando o campo se encontra vazio.
