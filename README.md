@@ -127,3 +127,17 @@ Para rodar esse projeto, você vai precisar criar um arquivo .env e adicionar as
 
 Node, Express
 
+
+## Banco de Dados
+
+![App Screenshot](https://i.imgur.com/cFStG09.png)
+
+Criei as tabelas `livros` e `series` para ter um controle melhor nas relações do banco.
+
+Optei por criar a tabela `atividades_respostas` para guardar as respostas, relacionando as tabelas `atividades` e `alternativas`.  
+Outras duas opções consideradas foram a inclusão de um campo na tabela `atividades` para armazenar o ID da alternativa correta, ou a criação de um campo booleano na tabela `alternativas`
+
+A inclusão de um campo 'status' nas tabelas, a fim de desativar registros em vez de excluí-los, seria uma alternativa para manter o controle de integridade. Isso impediria, por exemplo, a exclusão de registros relacionados a respostas. No entanto, dado que o projeto não requer o armazenamento das respostas do usuário, optei por não criar esse campo.
+
+
+A tabela está configurada para realizar a exclusão em cascata das chaves estrangeiras.
