@@ -211,8 +211,8 @@ router.post('/', async (req, res, next) => {
 
     const alternativasProcedure = [];
 
-    const atividadeSql = 'INSERT INTO atividades (??, ??, ??, ??) VALUES(?, ?, ?, ?);';
-    const alternativasSql = 'INSERT INTO alternativas (??, ??, ??) VALUES(?, ?, ?);';
+    const atividadeSql = 'INSERT INTO atividades (??, ??, ??) VALUES(?, ?, ?);';
+    const alternativasSql = 'INSERT INTO alternativas (??, ??) VALUES(?, ?);';
     const atividadeRespostaSql = 'INSERT INTO atividades_repostas (??, ??) VALUES(?, ?);';
 
     let alternativaCorretaResultId;
@@ -225,7 +225,7 @@ router.post('/', async (req, res, next) => {
       connection.beginTransaction((beginTransactionErr) => {
         if (beginTransactionErr) { throw beginTransactionErr; } // transacion error
 
-        const insertAtividade = ['descricao', 'idLivro', 'idSerie', 'status', descAtividade, idLivro, idSerie, 0];
+        const insertAtividade = ['descricao', 'idLivro', 'idSerie', descAtividade, idLivro, idSerie];
         const atividadeSqlFormat = mysql.format(atividadeSql, insertAtividade);
 
         // Query que executa a inclusão da atividade no banco
@@ -240,7 +240,7 @@ router.post('/', async (req, res, next) => {
 
           // Criador das querys que adicionam as atividades no banco
           const alternativaProcedure = (data) => new Promise((resolve, reject) => {
-            const insertAlternativa = ['descricao', 'idAtividade', 'status', data.descAlternativa, atividadeResult.insertId, 0];
+            const insertAlternativa = ['descricao', 'idAtividade', data.descAlternativa, atividadeResult.insertId];
             const alternativaSqlFormat = mysql.format(alternativasSql, insertAlternativa);
             connection.query(alternativaSqlFormat, (errorAlternativa, alternativaResult) => {
               if (errorAlternativa) {
